@@ -1,0 +1,32 @@
+SELECT DISTINCT
+    COUNT(pid),
+    locations.country,
+    locations.state,
+    locations.city,
+    locations.streetaddress
+FROM
+    attendences
+RIGHT JOIN locations ON attendences.lid = locations.locationid
+GROUP BY
+    locations.country,
+    locations.state,
+    locations.city,
+    locations.streetaddress
+
+SELECT DISTINCT
+    AVG(fee),
+    dates.quate,
+    locations.state,
+    locations.city
+FROM
+    attendences
+RIGHT JOIN dates ON attendences.did = dates.dateid
+RIGHT JOIN locations ON attendences.lid = locations.locationid
+GROUP BY
+    dates.quater,
+    locations.state,
+    locations.city
+
+SELECT DISTINCT avg(fee),dates.quater,locations.state,locations.city FROM attendences right join dates on attendences.did=dates.dateid right join locations on attendences.lid=locations.locationid GROUP BY dates.quater,locations.state,locations.city
+
+SELECT DISTINCT AVG(fee),dates.quater,locations.state,locations.city FROM attendences RIGHT JOIN dates ON attendences.did=dates.dateid RIGHT JOIN locations ON attendences.lid=locations.locationid GROUP BY dates.quater,locations.state,locations.city

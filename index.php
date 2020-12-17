@@ -1,6 +1,7 @@
 <?php
 session_start();
 include_once('dbh.inc.php');
+include_once('navbar.php');
 class Attendences
 {
     public $aid;
@@ -167,7 +168,7 @@ class Fact
         // Set counter and length for dimension array
         $counter = 1;
         $len     = count($_SESSION['dimension']);
-        if ($len >= 2) {
+        if ($len >= 1) {
             $query = $query . ",";
         }
         // Adding dimension
@@ -220,7 +221,7 @@ class Fact
             
             $counter++;
         }
-        print_pre($uniques);
+        // print_pre($uniques);
         print_r("<hr>");
         print_r($query);
         return $query;
@@ -305,6 +306,23 @@ if (isset($_POST['create'])) {
     $attendences->generateSQL();
 }
 
+if (isset($_POST['deleteDimension'])) {
+    $del_val = $_POST['remove'];
+    $key = array_search($del_val, $_SESSION['dimension']);
+    if (false !== $key) {
+        unset($_SESSION['dimension'][$key]);
+    }
+}
+
+if (isset($_POST['deleteMeasure'])) {
+    $del_val = $_POST['remove'];
+    $key = array_search($del_val, $_SESSION['measure']);
+    if (false !== $key) {
+        unset($_SESSION['measure'][$key]);
+    }
+}
+
+
 ?>
 	<!-- Start HTML -->
 	<!DOCTYPE html>
@@ -326,7 +344,7 @@ if (isset($_POST['create'])) {
 		}
 		</style>
 	</head>
-
+<div class="container">
 	<body>
 		<table>
 			<tr>
@@ -334,19 +352,32 @@ if (isset($_POST['create'])) {
 					<?php
                         // print_r($_SESSION['dimension']);
                         print('<br>');
-                        print('<h3>Dimension</h3>');
-                        foreach ($_SESSION['dimension'] as $key => $value) {
-                            if ($value != "") {
-                                print "{$key} => {$value} <br>";
-                            }
-                        }
+                        $self = $_SERVER['PHP_SELF'];
                         print('<h3>Measure</h3>');
                         foreach ($_SESSION['measure'] as $key => $value) {
                             if ($value != "") {
-                                print "{$key} => {$value} <br>";
+                                print("<form action='$self' method='POST'>");
+                                print "{$key} => {$value}";
+                                print("<input type='text' hidden value='$value' name='remove'>");
+                                $btn = "<button type='submit' id='del-btn' name='deleteMeasure' class='btn-danger'>Delete</button>";
+                                print($btn);
+                                print('</form>');
                             }
                         }
-                        print('<br>');
+                        print('<hr>');
+                        print('<h3>Dimension</h3>');
+                        foreach ($_SESSION['dimension'] as $key => $value) {
+                            if ($value != "") {
+                                print("<form action='$self' method='POST'>");
+                                print "{$key} => {$value}";
+                                print("<input type='text' hidden value='$value' name='remove'>");
+                                $btn = "<button type='submit' id='del-btn' name='deleteDimension' class='btn-danger'>Delete</button>";
+                                print($btn);
+                                print('</form>');
+                            }
+                        }
+
+                        
                     ?>
                 </td>
 				<td>
@@ -369,5 +400,5 @@ echo $_SERVER['PHP_SELF'];
 			</tr>
 		</table>
 	</body>
-
+</div>
 	</html>

@@ -16,7 +16,7 @@ class Dbh {
         $this->servername = "localhost";
         $this->username = "root";
         $this->password = "";
-        $this->dbname = "data_dm4";
+        $this->dbname = "dm_data4";
 
         $this->charset = 'utf8mb4';
         try {

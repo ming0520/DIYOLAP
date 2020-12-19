@@ -1,5 +1,34 @@
 <?php
 
+
+/*+----------------------------------------------------------------------
+ ||
+ ||  Class Dimension
+ ||
+ ||         Author:  Zhong Ming Tan
+ ||
+ ||        Purpose:  make a easy access to support the fact table
+ ||
+ ||  Inherits From:  No
+ ||
+ ||     Interfaces:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||      Constants:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||   Constructors: parameter is tableName and primaryKey for dimension's table
+ ||
+ ||  Class Methods:
+ ||  Inst. Methods:  
+ ||                 -addColumn(arrayKeyStr, colNameStr) : None
+ ||                 -getTblCol(arrayKeyStr) : tblName.column
+ ||                 -printDimension(none):none
+ ||
+ ++-----------------------------------------------------------------------*/
+
 class Dimension
 {
     public $tblName;
@@ -56,7 +85,38 @@ class Measure
     public $operation;
     public $formatString;
 }
-
+/*+----------------------------------------------------------------------
+ ||
+ ||  Class Dimension
+ ||
+ ||         Author:  Zhong Ming Tan
+ ||
+ ||        Purpose:  easy use fact class to replace xml
+ ||
+ ||  Inherits From:  Class Dimension, Class Measure, Class Pivot
+ ||
+ ||     Interfaces:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||      Constants:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||   Constructors: None
+ ||
+ ||  Class Methods:
+ ||  Inst. Methods:  
+ ||                 -printAllMeasure() : None
+ ||                 -printAllDimensionSlice() : None
+ ||                 -printAllDimension():none
+ ||                 -addReference(str,str):None
+ ||                 -get_dimension(str):str
+ ||                 -printMeasure(str):None or False
+ ||                 -getMeasure(str):str
+ ||                 -generateSQL(bool):None
+ ||
+ ++-----------------------------------------------------------------------*/
 class Fact
 {
     public $tblName;

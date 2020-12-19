@@ -19,7 +19,36 @@ Class Slice{
     public $dimension;
     public $value;
 }
-
+/*+----------------------------------------------------------------------
+ ||
+ ||  Class Dimension
+ ||
+ ||         Author:  Zhong Ming Tan
+ ||
+ ||        Purpose:  easy use fact class to replace xml
+ ||
+ ||  Inherits From:  Class Dimension, Class Measure, Class Pivot, Class Fact
+ ||
+ ||     Interfaces:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||      Constants:  Yes
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||   Constructors: None
+ ||
+ ||  Class Methods:
+ ||  Inst. Methods:  
+ ||                 -getResult(query):None
+ ||                 -printOptValue(array):None
+ ||                 -printPivotForm(array,str,str): none
+ ||                 -printPivotMenu():None
+ ||                 -generatePivot():None
+ ||                 -printResult():None
+ ||
+ ++-----------------------------------------------------------------------*/
 Class Report extends Dbh{
     
     public $query;
@@ -32,7 +61,7 @@ Class Report extends Dbh{
         $_SESSION['measure'] = array_filter($_SESSION['measure']);
         $this->cube = new CubeList;
     }
-
+// execute the query that provided by Fact Class
     public function getResult($query){
         if(!empty($query)){
             $this->query = $query;
@@ -47,7 +76,7 @@ Class Report extends Dbh{
             $this->column[] = $meta['name'];
         }
     }
-
+// print option value for pivot class
     public function printOptValue($array){
         if(empty($array)){
             print "<h1>Array is empty!</h1>";
@@ -58,7 +87,7 @@ Class Report extends Dbh{
         }
 
     }
-
+// print pivot form for each row in pivoting table
     public function printPivotForm($input,$formName,$formLabel){
         $self = $_SERVER['PHP_SELF'];
         print("<form action='$self' method='post'>");
@@ -75,7 +104,7 @@ Class Report extends Dbh{
                 print('</div>');
         print('</form>');
     }
-
+// print whole pivot column by calling printPivotForm function
     public function printPivotMenu(){
         $measures = array_filter($_SESSION['measure']);
         $dimensions = array_filter($_SESSION['dimension']);
@@ -87,7 +116,7 @@ Class Report extends Dbh{
         $this->printPivotForm($dimensions,'pivotCol','Column');
 
         $self = $_SERVER['PHP_SELF'];
-
+// produce add pivot value form
         print("<form action='$self' method='post'>");
         print('<label>'.ucfirst('pivot value').'</label>');
         print('<div class="form-row">');
@@ -107,7 +136,7 @@ Class Report extends Dbh{
         print("</div>");
         print('</form>');
     }
-
+// process pivot query and display result
     public function generatePivot(){
         $pivotMea = $_SESSION['pivotMea'];
         $pivotRow = $_SESSION['pivotRow'];
@@ -301,43 +330,13 @@ Class Report extends Dbh{
         print '</div>';
     }
 }
-
+// Create a report instance
 $report = new Report;
+// Generate result by using query
 $report->getResult($_SESSION['query']);
 $attendences = unserialize($_SESSION['attendences']);
 
-if (isset($_POST['dimension'])) {
-    $_SESSION['dimension'][] = $_POST['dimension'];
-}
-
-if (isset($_POST['measure'])) {
-    $_SESSION['measure'][] = $_POST['measure'];
-}
-
-if (isset($_POST['create'])) {
-    $_SESSION['create'][] = $_POST['create'];
-    $query = $attendences->generateSQL();
-    $_SESSION['query'] = $query;
-    print_pre($query);
-    exit();
-}
-
-if (isset($_POST['deleteDimension'])) {
-    $del_val = $_POST['remove'];
-    $key = array_search($del_val, $_SESSION['dimension']);
-    if (false !== $key) {
-        unset($_SESSION['dimension'][$key]);
-    }
-}
-
-if (isset($_POST['deleteMeasure'])) {
-    $del_val = $_POST['remove'];
-    $key = array_search($del_val, $_SESSION['measure']);
-    if (false !== $key) {
-        unset($_SESSION['measure'][$key]);
-    }
-}
-
+// If slice & dice button clicked, assign slice instant to session with slice key
 if (isset($_POST['slice'])) {
     $slice = new Slice;
     $slice->dimension = $_POST['slice'];
@@ -345,11 +344,13 @@ if (isset($_POST['slice'])) {
     $_SESSION['slice'][] = $slice;
 }
 
+// if clearSlice btn clicked, clear the slice session
 if (isset($_POST['clearSlice'])) {
     unset($_SESSION['slice']);
     $_SESSION['slice'][] = "";
 }
 
+// If deleteSlice btn clicked, remove coresponding value in slice session
 if (isset($_POST['deleteSlice'])) {
     $key = $_POST['remove'];
     if (false !== $key) {
@@ -357,34 +358,42 @@ if (isset($_POST['deleteSlice'])) {
     }
 }
 
+// if pivotMeasure btn is clicked, add pivot measure to session
 if (isset($_POST['pivotMea'])) {
     $_SESSION['pivotMea'] = $_POST['pivotMea'];
 }
 
+// if pivotCol btn is clicked, add pivot column to session
 if (isset($_POST['pivotCol'])) {
     $_SESSION['pivotCol'] = $_POST['pivotCol'];
 }
 
+// if pivotRow is clicked, add pivot row to session
 if (isset($_POST['pivotRow'])) {
     $_SESSION['pivotRow'] = $_POST['pivotRow'];
 }
 
+// if pivotValue is clicked, add pivot value to session
 if (isset($_POST['pivotValue'])) {
     $_SESSION['pivotValue'][$_POST['pivotValueKey']][] = $_POST['pivotValue'];
 }
 
+// delete measure for pivot from session
 if (isset($_POST['deleteMea'])) {
     unset($_SESSION['pivotMea']);
 }
 
+// delete column for pivot from session
 if (isset($_POST['deleteCol'])) {
     unset($_SESSION['pivotCol']);
 }
 
+// delete row for pivot from session
 if (isset($_POST['deleteRow'])) {
     unset($_SESSION['pivotRow']);
 }
 
+// clear all for pivot
 if (isset($_POST['clearPivot'])) {
     unset($_SESSION['pivotRow']);
     unset($_SESSION['pivotCol']);
@@ -392,6 +401,7 @@ if (isset($_POST['clearPivot'])) {
     unset($_SESSION['pivotValue']);
 }
 
+// delete coresponding pivotValue
 if (isset($_POST['deletePivotValue'])) {
     if(isset($_POST['key'])){
         $key = $_POST['key'];
@@ -402,7 +412,7 @@ if (isset($_POST['deletePivotValue'])) {
 
 }
 
-
+// create slice report
 if (isset($_POST['sliceBtn'])) {
     if(isset($_SESSION['query'])){
         $sliced = array_filter($_SESSION['slice']);
@@ -536,6 +546,7 @@ if (isset($_POST['sliceBtn'])) {
             </td>
             <td>
                <?php 
+            //    print the menu for Slice and Dice operation
                     $attendences->printAllDimensionSlice();
                ?>
                 <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="POST">
@@ -547,6 +558,7 @@ if (isset($_POST['sliceBtn'])) {
             </td>
             <td>
                 <?php
+                // Print the menu for pivot operation
                     $report->printPivotMenu();
                 ?>
                 <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="POST">

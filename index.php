@@ -9,7 +9,7 @@ function print_pre($msg){
     print_r($msg);
     print('</pre>');
 }
-
+// Add dates dimension table, corespond to database schema
 $datesTbl = new Dimension('dates', 'dateid');
 $datesTbl->addColumn('year', 'year');
 $datesTbl->addColumn('quater', 'quater');
@@ -39,6 +39,7 @@ $participantsTbl->addColumn('ptype', 'ptype');
 $participantsTbl->addColumn('gender', 'gender');
 $participantsTbl->addColumn('pname', 'pname');
 
+// Create a fact table for attendences, corespond to database schema
 $attendences                     = new Fact;
 $attendences->tblName            = 'attendences';
 $attendences->dimension['dates'] = $datesTbl;
@@ -47,20 +48,25 @@ $attendences->dimension['organisers'] = $organisersTbl;
 $attendences->dimension['events'] = $eventsTbl;
 $attendences->dimension['participants'] = $participantsTbl;
 
+
+// Add the foriegn key for attendences fact table
 $attendences->addReference('dates','did');
 $attendences->addReference('locations','lid');
 $attendences->addReference('organisers','oid');
 $attendences->addReference('events','eid');
 $attendences->addReference('participants','pid');
 
+// Create the fee measure structure
 $measure               = new Measure;
 $measure->name         = 'Fee';
 $measure->column       = 'fee';
 $measure->operation    = 'SUM';
 $measure->formatString = '#,###.00';
 
+// add the measure to fact table
 $attendences->measure['fee'] = $measure;
 
+// Create attendences measure structure
 $measure               = new Measure;
 $measure->name         = 'Attendence';
 $measure->column       = 'aid';
@@ -69,21 +75,27 @@ $measure->formatString = '#,###.00';
 
 $attendences->measure['attendence'] = $measure;
 
+// assign the attendences obj to session
 $_SESSION['attendences'] = serialize($attendences);
 
+// if clear btn clicked, clear all dimension and measure
 if (isset($_POST['clear'])) {
     session_unset();
     $_SESSION['dimension'][] = "";
     $_SESSION['measure'][]   = "";
 }
+
+// add dimension to session array
 if (isset($_POST['dimension'])) {
     $_SESSION['dimension'][] = $_POST['dimension'];
 }
 
+// add measure to session array
 if (isset($_POST['measure'])) {
     $_SESSION['measure'][] = $_POST['measure'];
 }
 
+// if create report btn clicked, generate sql and pass to report.php
 if (isset($_POST['create'])) {
     $_SESSION['create'][] = $_POST['create'];
     $query = $attendences->generateSQL($false);
@@ -92,6 +104,7 @@ if (isset($_POST['create'])) {
     exit();
 }
 
+// if deleteDimension is clicked, delete corespond dimension
 if (isset($_POST['deleteDimension'])) {
     $del_val = $_POST['remove'];
     $key = array_search($del_val, $_SESSION['dimension']);
@@ -99,7 +112,7 @@ if (isset($_POST['deleteDimension'])) {
         unset($_SESSION['dimension'][$key]);
     }
 }
-
+// if deleteMeasure is clicked, delete corespond measure
 if (isset($_POST['deleteMeasure'])) {
     $del_val = $_POST['remove'];
     $key = array_search($del_val, $_SESSION['measure']);

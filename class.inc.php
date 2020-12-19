@@ -97,7 +97,7 @@ class Fact
             print("<form action='$self' method='post'>");
                 print('<label>'.ucfirst($dim->tblName).'</label>&nbsp;:&nbsp;');
                 print('<div class="form-row">');
-                    print('<div class="form-group col-md-2">');
+                    print('<div class="form-group col-md-4">');
                         print("<select class='custom-select' name='slice' id='slice'>");
                         $dim->printDimension();
                         print('</select>');

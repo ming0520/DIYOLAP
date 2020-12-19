@@ -12,15 +12,15 @@
   <div class="collapse navbar-collapse" id="navbarNav">
     <ul class="navbar-nav">
       <li class="nav-item active">
-        <a class="nav-link" href="index.php">Home <span class="sr-only">(current)</span></a>
+        <a class="nav-link" href="index.php">AttendencesFact <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="team_index.php">HasTeamFact</a>
       </li>
       <li class="nav-item active">
         <a class="nav-link" href="report.php">Report</a>
       </li>
       <!-- <li class="nav-item active">
-        <a class="nav-link" href="#">Pricing</a>
-      </li>
-      <li class="nav-item active">
         <a class="nav-link disabled" href="#">Disabled</a>
       </li> -->
     </ul>

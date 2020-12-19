@@ -70,6 +70,8 @@ $measure->formatString = '#,###.00';
 
 $attendences->measure['attendence'] = $measure;
 
+// hasTeam
+
 $_SESSION['attendences'] = serialize($attendences);
 
 if (isset($_POST['clear'])) {
@@ -133,6 +135,7 @@ if (isset($_POST['deleteMeasure'])) {
 	</head>
 <div class="container">
 	<body>
+        <h1>Attendences Fact</h1>
 		<table>
 			<tr>
 				<td>

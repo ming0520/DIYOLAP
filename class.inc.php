@@ -1,16 +1,5 @@
 <?php
 
-class Attendences
-{
-    public $aid;
-    public $did;
-    public $pid;
-    public $lid;
-    public $oid;
-    public $status;
-    public $fees;
-}
-
 class Dimension
 {
     public $tblName;

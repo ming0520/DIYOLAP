@@ -19,7 +19,36 @@ Class Slice{
     public $dimension;
     public $value;
 }
-
+/*+----------------------------------------------------------------------
+ ||
+ ||  Class Dimension
+ ||
+ ||         Author:  Zhong Ming Tan
+ ||
+ ||        Purpose:  easy use fact class to replace xml
+ ||
+ ||  Inherits From:  Class Dimension, Class Measure, Class Pivot, Class Fact
+ ||
+ ||     Interfaces:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||      Constants:  Yes
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||   Constructors: None
+ ||
+ ||  Class Methods:
+ ||  Inst. Methods:  
+ ||                 -getResult(query):None
+ ||                 -printOptValue(array):None
+ ||                 -printPivotForm(array,str,str): none
+ ||                 -printPivotMenu():None
+ ||                 -generatePivot():None
+ ||                 -printResult():None
+ ||
+ ++-----------------------------------------------------------------------*/
 Class Report extends Dbh{
     
     public $query;
@@ -31,19 +60,8 @@ Class Report extends Dbh{
         $_SESSION['dimension'] = array_filter($_SESSION['dimension']);
         $_SESSION['measure'] = array_filter($_SESSION['measure']);
         $this->cube = new CubeList;
-        // foreach($_SESSION['dimension'] as $dimension){
-        //     $this->cube->dimension[$dimension][] = '';
-        //     $this->cube->dimension = array_filter($this->cube->dimension[$dimension]);
-            
-        // }
-        // foreach($_SESSION['measure'] as $measure){
-        //     $this->cube->measure[$measure][] = '';
-        //     $this->cube->measure = array_filter($this->cube->measure[$measure]);
-        // }
-        // $this->cube->dimension = array_filter($this->cube->dimension);
-        // $this->cube->measure = array_filter($this->cube->measure);
     }
-
+// execute the query that provided by Fact Class
     public function getResult($query){
         if(!empty($query)){
             $this->query = $query;
@@ -58,7 +76,7 @@ Class Report extends Dbh{
             $this->column[] = $meta['name'];
         }
     }
-
+// print option value for pivot class
     public function printOptValue($array){
         if(empty($array)){
             print "<h1>Array is empty!</h1>";
@@ -69,7 +87,7 @@ Class Report extends Dbh{
         }
 
     }
-
+// print pivot form for each row in pivoting table
     public function printPivotForm($input,$formName,$formLabel){
         $self = $_SERVER['PHP_SELF'];
         print("<form action='$self' method='post'>");
@@ -86,7 +104,7 @@ Class Report extends Dbh{
                 print('</div>');
         print('</form>');
     }
-
+// print whole pivot column by calling printPivotForm function
     public function printPivotMenu(){
         $measures = array_filter($_SESSION['measure']);
         $dimensions = array_filter($_SESSION['dimension']);
@@ -98,7 +116,7 @@ Class Report extends Dbh{
         $this->printPivotForm($dimensions,'pivotCol','Column');
 
         $self = $_SERVER['PHP_SELF'];
-
+// produce add pivot value form
         print("<form action='$self' method='post'>");
         print('<label>'.ucfirst('pivot value').'</label>');
         print('<div class="form-row">');
@@ -117,11 +135,8 @@ Class Report extends Dbh{
             
         print("</div>");
         print('</form>');
-        // print_pre(var_dump($measures));
-        // print_pre(var_dump($dimensions));
-        // print_pre(var_dump($slices));
     }
-
+// process pivot query and display result
     public function generatePivot(){
         $pivotMea = $_SESSION['pivotMea'];
         $pivotRow = $_SESSION['pivotRow'];
@@ -142,7 +157,6 @@ Class Report extends Dbh{
             $pivotValues = array_filter($_SESSION['pivotValue']);
         }
         
-        // print_pre($pivotValues);
         if(!empty($pivotValues)){
             $query .= " WHERE ";
             foreach($pivotValues as $key => $pivotValue){
@@ -162,7 +176,6 @@ Class Report extends Dbh{
 
 
         $query .= ' ORDER BY '.$colCol;
-        // print_r($query);
         $colStmt = $this->connect()->prepare($query);
         $colStmt->execute();
 
@@ -180,7 +193,6 @@ Class Report extends Dbh{
         $query .= $select;
         $query .= $rowTbl .".". $rowCol.",";
         foreach($column as $col){
-            // $str = " ".$meaOp."(CASE WHEN ". $colCol."='".$col."'". " THEN ". $meaName ." ELSE 0 END".")". " AS '".$colCol." ".$col."'";
             $str = " ".$meaOp."(CASE WHEN ". $colCol."='".$col."'". " THEN ". $meaName ." ELSE NULL END".")". " AS '".$col."'";
             $query .= $str;
             if($col == end($column)){
@@ -198,26 +210,23 @@ Class Report extends Dbh{
             $dim = $attendences->dimension[$colTbl];
             $ref = $attendences->tblName.".".$attendences->reference[$colTbl];
             $colKey = $dim->tblName.".".$dim->pkey;
-            // print_pre(var_dump("colKey: ".$colKey));
             $query .= $join. $dim->tblName ." ON ". $ref . " = ".$colKey;
         }
         else{
             $dim = $attendences->dimension[$colTbl];
             $ref = $attendences->tblName.".".$attendences->reference[$colTbl];
             $colKey = $dim->tblName.".".$dim->pkey;
-            // print_pre(var_dump("colKey: ".$colKey));
             $query .= $join. $dim->tblName ." ON ". $ref . " = ".$colKey;
 
             $dim = $attendences->dimension[$rowTbl];
             $ref = $attendences->tblName.".".$attendences->reference[$rowTbl];
             $rowKey = $dim->tblName.".".$dim->pkey;
-            // print_pre(var_dump("colKey: ".$colKey));
             $query .= $join. $dim->tblName ." ON ". $ref . " = ".$rowKey;
         }
 
         $query .= " GROUP BY ";
         $query .= $pivotRow;
-        // print_r($query);
+
 
         
         // Start PDO connection
@@ -244,8 +253,6 @@ Class Report extends Dbh{
             $rowCount = $pivotStmt->rowCount();
             print('<div class="container-fluid">');
             print('<div class="table-responsive table-responsive-sm">');
-            // print "<table class='table table-striped table-dark table-hover'>";
-            //     print '<thead class="thead-dark"><tr>';
             print "<table class='table table-striped table-hover'>";
             print '<thead class=""><tr>';
                 print '<tr>';
@@ -276,23 +283,6 @@ Class Report extends Dbh{
         }
         
         return $query;
-
-        // print_pre(var_dump("pivotMea: ".$pivotMea));
-        // print_pre(var_dump("pivotRow: ".$pivotRow));
-        // print_pre(var_dump("pivotCol: ".$pivotCol));
-
-        // print_pre(var_dump("rowTbl: ".$rowTbl));
-        // print_pre(var_dump("colTbl: ".$colTbl));
-
-        // print_pre(var_dump("rowCol: ".$rowCol));
-        // print_pre(var_dump("colCol: ".$colCol));
-        
-        // print_pre(var_dump("meaName: ".$meaName));
-        // print_pre(var_dump("meaOp: ".$meaOp));
-
-        // print_pre(var_dump("query: ".$query));
-        // print_pre(var_dump($column));
-
     }
 
     
@@ -310,9 +300,6 @@ Class Report extends Dbh{
 
             }
         }
-        // print('<pre>');
-        // var_dump($this->cube);
-        // print('</pre>');
         $rowCount = $this->result->rowCount();
         print('<div class="container-fluid">');
         print('<div class="table-responsive table-responsive-sm">');
@@ -343,47 +330,13 @@ Class Report extends Dbh{
         print '</div>';
     }
 }
-// print_r($_SESSION['query']);
-// var_dump($_SESSION['dimension']);
-// var_dump($_SESSION['measure']);
-// $query = 'SELECT DISTINCT COUNT(aid),dates.year FROM attendences RIGHT JOIN dates ON attendences.did=dates.dateid GROUP BY dates.year';
+// Create a report instance
 $report = new Report;
+// Generate result by using query
 $report->getResult($_SESSION['query']);
 $attendences = unserialize($_SESSION['attendences']);
 
-if (isset($_POST['dimension'])) {
-    $_SESSION['dimension'][] = $_POST['dimension'];
-}
-
-if (isset($_POST['measure'])) {
-    $_SESSION['measure'][] = $_POST['measure'];
-}
-
-if (isset($_POST['create'])) {
-    $_SESSION['create'][] = $_POST['create'];
-    $query = $attendences->generateSQL();
-    $_SESSION['query'] = $query;
-    print_pre($query);
-    // header("Location: report.php");
-    exit();
-}
-
-if (isset($_POST['deleteDimension'])) {
-    $del_val = $_POST['remove'];
-    $key = array_search($del_val, $_SESSION['dimension']);
-    if (false !== $key) {
-        unset($_SESSION['dimension'][$key]);
-    }
-}
-
-if (isset($_POST['deleteMeasure'])) {
-    $del_val = $_POST['remove'];
-    $key = array_search($del_val, $_SESSION['measure']);
-    if (false !== $key) {
-        unset($_SESSION['measure'][$key]);
-    }
-}
-
+// If slice & dice button clicked, assign slice instant to session with slice key
 if (isset($_POST['slice'])) {
     $slice = new Slice;
     $slice->dimension = $_POST['slice'];
@@ -391,11 +344,13 @@ if (isset($_POST['slice'])) {
     $_SESSION['slice'][] = $slice;
 }
 
+// if clearSlice btn clicked, clear the slice session
 if (isset($_POST['clearSlice'])) {
     unset($_SESSION['slice']);
     $_SESSION['slice'][] = "";
 }
 
+// If deleteSlice btn clicked, remove coresponding value in slice session
 if (isset($_POST['deleteSlice'])) {
     $key = $_POST['remove'];
     if (false !== $key) {
@@ -403,34 +358,42 @@ if (isset($_POST['deleteSlice'])) {
     }
 }
 
+// if pivotMeasure btn is clicked, add pivot measure to session
 if (isset($_POST['pivotMea'])) {
     $_SESSION['pivotMea'] = $_POST['pivotMea'];
 }
 
+// if pivotCol btn is clicked, add pivot column to session
 if (isset($_POST['pivotCol'])) {
     $_SESSION['pivotCol'] = $_POST['pivotCol'];
 }
 
+// if pivotRow is clicked, add pivot row to session
 if (isset($_POST['pivotRow'])) {
     $_SESSION['pivotRow'] = $_POST['pivotRow'];
 }
 
+// if pivotValue is clicked, add pivot value to session
 if (isset($_POST['pivotValue'])) {
     $_SESSION['pivotValue'][$_POST['pivotValueKey']][] = $_POST['pivotValue'];
 }
 
+// delete measure for pivot from session
 if (isset($_POST['deleteMea'])) {
     unset($_SESSION['pivotMea']);
 }
 
+// delete column for pivot from session
 if (isset($_POST['deleteCol'])) {
     unset($_SESSION['pivotCol']);
 }
 
+// delete row for pivot from session
 if (isset($_POST['deleteRow'])) {
     unset($_SESSION['pivotRow']);
 }
 
+// clear all for pivot
 if (isset($_POST['clearPivot'])) {
     unset($_SESSION['pivotRow']);
     unset($_SESSION['pivotCol']);
@@ -438,6 +401,7 @@ if (isset($_POST['clearPivot'])) {
     unset($_SESSION['pivotValue']);
 }
 
+// delete coresponding pivotValue
 if (isset($_POST['deletePivotValue'])) {
     if(isset($_POST['key'])){
         $key = $_POST['key'];
@@ -448,7 +412,7 @@ if (isset($_POST['deletePivotValue'])) {
 
 }
 
-
+// create slice report
 if (isset($_POST['sliceBtn'])) {
     if(isset($_SESSION['query'])){
         $sliced = array_filter($_SESSION['slice']);
@@ -467,12 +431,7 @@ if (isset($_POST['sliceBtn'])) {
         print("<p>Please create report at main page first!</p>");
     }
 }
-// print('<pre>');
-// var_dump($_SESSION['slice']);
-// print("<hr>");
-// print('</pre>');
 ?>
-<!-- SELECT DISTINCT COUNT(aid),dates.year FROM attendences RIGHT JOIN dates ON attendences.did=dates.dateid GROUP BY dates.year -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -549,7 +508,6 @@ if (isset($_POST['sliceBtn'])) {
                         $value = $slice->dimension."=>".$slice->value;
                         if ($value != "") {
                             print("<form action='$self' method='POST'>");
-                            // print "{$key} => {$value}";
                             print "{$key} => {$value}";
                             print("<input type='text' hidden value='$key' name='remove'>");
                             $btn = "<button type='submit' id='del-btn' name='deleteSlice' class='btn-danger'>Delete</button>";
@@ -560,7 +518,6 @@ if (isset($_POST['sliceBtn'])) {
             }?>
             <?php
                 print('<hr>');
-                // print_r($_SESSION['dimension']);
                 $self = $_SERVER['PHP_SELF'];
                 print('<h3>Measure</h3>');
                 foreach ($_SESSION['measure'] as $key => $value) {
@@ -589,6 +546,7 @@ if (isset($_POST['sliceBtn'])) {
             </td>
             <td>
                <?php 
+            //    print the menu for Slice and Dice operation
                     $attendences->printAllDimensionSlice();
                ?>
                 <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="POST">
@@ -600,6 +558,7 @@ if (isset($_POST['sliceBtn'])) {
             </td>
             <td>
                 <?php
+                // Print the menu for pivot operation
                     $report->printPivotMenu();
                 ?>
                 <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="POST">

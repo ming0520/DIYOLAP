@@ -20,9 +20,6 @@
       <li class="nav-item active">
         <a class="nav-link" href="report.php">Report</a>
       </li>
-      <!-- <li class="nav-item active">
-        <a class="nav-link disabled" href="#">Disabled</a>
-      </li> -->
     </ul>
   </div>
 </nav>

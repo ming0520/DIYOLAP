@@ -1,15 +1,33 @@
 <?php
 
-class Attendences
-{
-    public $aid;
-    public $did;
-    public $pid;
-    public $lid;
-    public $oid;
-    public $status;
-    public $fees;
-}
+
+/*+----------------------------------------------------------------------
+ ||
+ ||  Class Dimension
+ ||
+ ||         Author:  Zhong Ming Tan
+ ||
+ ||        Purpose:  make a easy access to support the fact table
+ ||
+ ||  Inherits From:  No
+ ||
+ ||     Interfaces:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||      Constants:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||   Constructors: parameter is tableName and primaryKey for dimension's table
+ ||
+ ||  Class Methods:
+ ||  Inst. Methods:  
+ ||                 -addColumn(arrayKeyStr, colNameStr) : None
+ ||                 -getTblCol(arrayKeyStr) : tblName.column
+ ||                 -printDimension(none):none
+ ||
+ ++-----------------------------------------------------------------------*/
 
 class Dimension
 {
@@ -67,7 +85,38 @@ class Measure
     public $operation;
     public $formatString;
 }
-
+/*+----------------------------------------------------------------------
+ ||
+ ||  Class Dimension
+ ||
+ ||         Author:  Zhong Ming Tan
+ ||
+ ||        Purpose:  easy use fact class to replace xml
+ ||
+ ||  Inherits From:  Class Dimension, Class Measure, Class Pivot
+ ||
+ ||     Interfaces:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||      Constants:  No
+ ||
+ |+-----------------------------------------------------------------------
+ ||
+ ||   Constructors: None
+ ||
+ ||  Class Methods:
+ ||  Inst. Methods:  
+ ||                 -printAllMeasure() : None
+ ||                 -printAllDimensionSlice() : None
+ ||                 -printAllDimension():none
+ ||                 -addReference(str,str):None
+ ||                 -get_dimension(str):str
+ ||                 -printMeasure(str):None or False
+ ||                 -getMeasure(str):str
+ ||                 -generateSQL(bool):None
+ ||
+ ++-----------------------------------------------------------------------*/
 class Fact
 {
     public $tblName;
@@ -217,9 +266,7 @@ class Fact
         foreach ($_SESSION['dimension'] as $dimension){
             $tables[] = explode('.',$dimension)[0];
         }
-        // https://www.tutorialrepublic.com/faq/how-to-remove-empty-values-from-an-array-in-php.php#:~:text=You%20can%20simply%20use%20the,array%20using%20a%20callback%20function.
         $tables = array_filter($tables);
-        // https://www.php.net/manual/en/function.array-unique.php
         $uniques = array_unique($tables);
       
 
@@ -239,30 +286,12 @@ class Fact
                 $counter = 1;
                 $len     = count($sliceArr);
                 if(!empty($sliceArr)){
-                    // $query = $query . " WHERE ";
                     $keyArr;
                     foreach($sliceArr as $key => $slice){
                         $keyArr[] = $slice->dimension;
-                        // if ($slice != "") {
-                        //     if ($counter != $len) {
-                        //         $query = $query . $slice->dimension . "='" . $slice->value ."' AND " ;
-                        //     } else {
-                        //         $query = $query . $slice->dimension . "='" . $slice->value ."'" ;
-                        //     }
-                            
-                        // }
-                        // $counter++;
                     }
-                //     print('<hr><pre>');
-                //     var_dump($sliceArr);
-                //     print('</pre>');
-                // print('<hr><pre>');
-                //    var_dump($keyArr);
-                //    print('</pre>');
+
                    $uniqueKey = array_unique($keyArr);
-                //    print('<hr><pre>');
-                //    var_dump($uniqueKey);
-                //    print('</pre>');
                 }
                 $val;
                 foreach($uniqueKey as $ky){
@@ -293,9 +322,7 @@ class Fact
                     $countVal++;
                 }
                 $query=$query.$test;
-                // print('<hr><pre>');
-                // var_dump($query.$test);
-                // print('</pre>');               
+           
             }            
         }
         // Adding Group By Command
@@ -316,11 +343,7 @@ class Fact
             
             $counter++;
         }
-        // print_pre($uniques);
-        // print_r("<hr>");
-        // print_r($query);
+
         return $query;
     }
 }
-
-// 2014 1982 2017 1970 2010 1997 1999 2005 2004 for india and norway

@@ -59,10 +59,6 @@ Class Report extends Dbh{
         }
     }
 
-    public function generatePivoting(){
-        
-    }
-
     public function printOptValue($array){
         if(empty($array)){
             print "<h1>Array is empty!</h1>";
@@ -77,17 +73,17 @@ Class Report extends Dbh{
     public function printPivotForm($input,$formName,$formLabel){
         $self = $_SERVER['PHP_SELF'];
         print("<form action='$self' method='post'>");
-            print('<label>'.ucfirst($formLabel).'</label>&nbsp;:&nbsp;');
-            print('<div class="form-row">');
-                print('<div class="form-group col-md-6">');
-                    print("<select class='custom-select' name='$formName' id='$formName'>");
-                    $this->printOptValue($input);
-                    print('</select>');
+                print('<label>'.ucfirst($formLabel).'</label>');
+                print('<div class="form-row">');
+                        print('<div class="form-group col-md-8">');
+                                print("<select class='custom-select' name='$formName' id='$formName'>");
+                                    $this->printOptValue($input);
+                                print('</select>');
+                        print('</div>');
+                        print('<div class="form-group col-md-2">');
+                                print('<input class = "btn btn-primary" type="submit" value="Add"> ');
+                        print('</div>');
                 print('</div>');
-                print('<div class="form-group col-md-6">');
-                    print('&nbsp;&nbsp;<input class = "btn btn-primary" type="submit" value="Add"> ');
-                print('</div>');
-            print('</div>');
         print('</form>');
     }
 
@@ -98,33 +94,199 @@ Class Report extends Dbh{
         $this->printPivotForm($measures,'pivotMea','measures');
         $this->printPivotForm($dimensions,'pivotRow','Row');
         $this->printPivotForm($dimensions,'pivotCol','Column');
+
+        $self = $_SERVER['PHP_SELF'];
+
+        print("<form action='$self' method='post'>");
+        print('<label>'.ucfirst('pivot value').'</label>');
+        print('<div class="form-row">');
+            print('<div class="form-group col-md-4">');
+                    print("<select class='custom-select' name='pivotValueKey' id='pivotValueKey'>");
+                        $optValue = $_SESSION['pivotCol'];
+                        print("<option value='$optValue'>$optValue</option>");
+                    print('</select>');
+            print("</div>");
+            print('<div class="form-group col-md-4">');
+                    print('<input type="text" name="pivotValue" id="pivotValue" class="form-control" placeholder="Value">');
+            print("</div>");
+            print('<div class="form-group col-md-2">');
+                    print('<input class = "btn btn-primary" type="submit" value="Add"> ');
+            print("</div>");
+            
+        print("</div>");
+        print('</form>');
         // print_pre(var_dump($measures));
         // print_pre(var_dump($dimensions));
         // print_pre(var_dump($slices));
     }
 
-    public function processPivot(){
-        $select = 'SELECT DISTINCT ';
-        $join = ' RIGHT JOIN ';
-        
-        $query = $select;
-
-        print_r($query);
-    }
-
-    public function getColumn(){
+    public function generatePivot(){
         $pivotMea = $_SESSION['pivotMea'];
         $pivotRow = $_SESSION['pivotRow'];
         $pivotCol = $_SESSION['pivotCol'];
+
         $meaOp = explode('(',$pivotMea)[0];
         $meaName = explode('(',$pivotMea)[1];
         $meaName = explode(')',$meaName)[0];
+
+        $rowTbl = explode('.',$pivotRow)[0];
+        $colTbl = explode('.',$pivotCol)[0];
+
+        $rowCol = explode('.',$pivotRow)[1];
+        $colCol = explode('.',$pivotCol)[1];
+
+        $query = 'SELECT DISTINCT '. $colCol. ' FROM '. $colTbl;
+        $pivotValues = array_filter($_SESSION['pivotValue']);
+        // print_pre($pivotValues);
+        if(!empty($pivotValues)){
+            $query .= " WHERE ";
+            foreach($pivotValues as $key => $pivotValue){
+                $query .= $key." IN (";
+                foreach($pivotValue as $ky=>$pivot){
+                    $query.= "'".$pivot."'";
+                    if($pivot != end($pivotValue)){
+                        $query.=",";
+                    }
+                }
+                $query .= ") ";
+                if($pivotValue != end($pivotValues)){
+                    $query.=" AND ";
+                }
+            }
+        }
+
+
+        $query .= ' ORDER BY '.$colCol;
+        // print_r($query);
+        $colStmt = $this->connect()->prepare($query);
+        $colStmt->execute();
+
+        if($colStmt->rowCount()){
+            while($row = $colStmt->fetch()){
+                $column[] = $row[$colCol];
+            }
+        }
+
+        $query = "";
+
+        $select = "SELECT DISTINCT ";
+        $join = " RIGHT JOIN ";
+
+        $query .= $select;
+        $query .= $rowTbl .".". $rowCol.",";
+        foreach($column as $col){
+            // $str = " ".$meaOp."(CASE WHEN ". $colCol."='".$col."'". " THEN ". $meaName ." ELSE 0 END".")". " AS '".$colCol." ".$col."'";
+            $str = " ".$meaOp."(CASE WHEN ". $colCol."='".$col."'". " THEN ". $meaName ." ELSE NULL END".")". " AS '".$col."'";
+            $query .= $str;
+            if($col == end($column)){
+
+            }else{
+                $query .=",";
+            }
+        } 
+
+        $query .= " FROM ";
+        $attendences = unserialize($_SESSION['attendences']);
+        $query .= $attendences->tblName . " ";
+
+        if($colTbl == $rowTbl){
+            $dim = $attendences->dimension[$colTbl];
+            $ref = $attendences->tblName.".".$attendences->reference[$colTbl];
+            $colKey = $dim->tblName.".".$dim->pkey;
+            // print_pre(var_dump("colKey: ".$colKey));
+            $query .= $join. $dim->tblName ." ON ". $ref . " = ".$colKey;
+        }
+        else{
+            $dim = $attendences->dimension[$colTbl];
+            $ref = $attendences->tblName.".".$attendences->reference[$colTbl];
+            $colKey = $dim->tblName.".".$dim->pkey;
+            // print_pre(var_dump("colKey: ".$colKey));
+            $query .= $join. $dim->tblName ." ON ". $ref . " = ".$colKey;
+
+            $dim = $attendences->dimension[$rowTbl];
+            $ref = $attendences->tblName.".".$attendences->reference[$rowTbl];
+            $rowKey = $dim->tblName.".".$dim->pkey;
+            // print_pre(var_dump("colKey: ".$colKey));
+            $query .= $join. $dim->tblName ." ON ". $ref . " = ".$rowKey;
+        }
+
+        $query .= " GROUP BY ";
+        $query .= $pivotRow;
+        // print_r($query);
+
         
-        print_pre(var_dump($pivotMea));
-        print_pre(var_dump($pivotRow));
-        print_pre(var_dump($pivotCol));
-        print_pre(var_dump($meaName));
-        print_pre(var_dump($meaOp));
+        // Start PDO connection
+        $pivotStmt = $this->connect()->prepare($query);
+        $pivotStmt->execute();
+
+        $ttlCol = $pivotStmt->columnCount();
+        $column = array();
+
+        for ($counter = 0; $counter < $ttlCol; $counter ++) {
+            $meta = $pivotStmt->getColumnMeta($counter);
+            $column[] = $meta['name'];
+        }
+        
+        $result = array();
+
+        if($pivotStmt->rowCount()){
+            while($row = $pivotStmt->fetch()){
+                foreach($column as $col){
+                    $result[$col][] = $row[$col];
+                }
+            }
+
+            $rowCount = $pivotStmt->rowCount();
+            print('<div class="container-fluid">');
+            print('<div class="table-responsive table-responsive-sm">');
+            // print "<table class='table table-striped table-dark table-hover'>";
+            //     print '<thead class="thead-dark"><tr>';
+            print "<table class='table table-striped table-hover'>";
+            print '<thead class=""><tr>';
+                print '<tr>';
+                for($j=0;$j<2;$j++){
+                    print '<th>'.'</th>';
+                }
+                $colspan = $ttlCol - 1;
+                print "<th colspan=$colspan>".$colCol."</th>";
+                print '</tr>';
+                    print("<th scope='row'> Count </th>");
+                    foreach($column as $col){
+                        print '<th>'.$col.'</th>';
+                    }
+                print '</tr>';
+                print '</thead>';
+                for($i=0; $i < $rowCount; $i++){
+                    print('<tr>');
+                    print("<td scope='row'>".$i."</td>");
+                    foreach($column as $col){
+                        print('<td>'.$result[$col][$i].'</td>');
+                    }
+                    print('</tr>');
+                }
+            print '</table>';
+            print '</div>';
+            print '</div>';
+
+        }
+        
+        return $query;
+
+        // print_pre(var_dump("pivotMea: ".$pivotMea));
+        // print_pre(var_dump("pivotRow: ".$pivotRow));
+        // print_pre(var_dump("pivotCol: ".$pivotCol));
+
+        // print_pre(var_dump("rowTbl: ".$rowTbl));
+        // print_pre(var_dump("colTbl: ".$colTbl));
+
+        // print_pre(var_dump("rowCol: ".$rowCol));
+        // print_pre(var_dump("colCol: ".$colCol));
+        
+        // print_pre(var_dump("meaName: ".$meaName));
+        // print_pre(var_dump("meaOp: ".$meaOp));
+
+        // print_pre(var_dump("query: ".$query));
+        // print_pre(var_dump($column));
 
     }
 
@@ -247,6 +409,10 @@ if (isset($_POST['pivotRow'])) {
     $_SESSION['pivotRow'] = $_POST['pivotRow'];
 }
 
+if (isset($_POST['pivotValue'])) {
+    $_SESSION['pivotValue'][$_POST['pivotValueKey']][] = $_POST['pivotValue'];
+}
+
 if (isset($_POST['deleteMea'])) {
     unset($_SESSION['pivotMea']);
 }
@@ -259,9 +425,23 @@ if (isset($_POST['deleteRow'])) {
     unset($_SESSION['pivotRow']);
 }
 
-if (isset($_POST['pivotBtn'])) {
-    $report->getColumn();
+if (isset($_POST['clearPivot'])) {
+    unset($_SESSION['pivotRow']);
+    unset($_SESSION['pivotCol']);
+    unset($_SESSION['pivotMea']);
+    unset($_SESSION['pivotValue']);
 }
+
+if (isset($_POST['deletePivotValue'])) {
+    if(isset($_POST['key'])){
+        $key = $_POST['key'];
+        $ky = $_POST['ky'];
+        $val = $_POST['value'];
+        unset($_SESSION['pivotValue'][$key][$ky]);
+    }
+
+}
+
 
 if (isset($_POST['sliceBtn'])) {
     if(isset($_SESSION['query'])){
@@ -335,6 +515,23 @@ if (isset($_POST['sliceBtn'])) {
                     print($btn);
                     print('</form>');
                 }
+                if(isset($_SESSION['pivotValue'])){
+                    foreach ($_SESSION['pivotValue'] as $key => $value) {
+                        if ($value != "") { 
+                            foreach($value as $ky => $val){
+                                print("<form action='$self' method='POST'>");
+                                print("<label>{$key} => {$val}</label>");
+                                print("<input type='text' hidden value='$key' name='key'>");
+                                print("<input type='text' hidden value='$ky' name='ky'>");
+                                print("<input type='text' hidden value='$val' name='value'>");
+                                $btn = "<button type='submit' id='del-btn' name='deletePivotValue' class='btn-danger'>Delete</button>";
+                                print($btn);
+                                print('</form>');
+                            }
+
+                        }
+                    }  
+                }
                 print('<hr>');
             ?>
             <?php
@@ -346,6 +543,7 @@ if (isset($_POST['sliceBtn'])) {
                         $value = $slice->dimension."=>".$slice->value;
                         if ($value != "") {
                             print("<form action='$self' method='POST'>");
+                            // print "{$key} => {$value}";
                             print "{$key} => {$value}";
                             print("<input type='text' hidden value='$key' name='remove'>");
                             $btn = "<button type='submit' id='del-btn' name='deleteSlice' class='btn-danger'>Delete</button>";
@@ -408,6 +606,17 @@ if (isset($_POST['sliceBtn'])) {
         </tr>
 </div>
     </table>
-    <?php $report->printResult(); ?>
+    <?php 
+        if(isset($_POST['pivotBtn'])){
+        //     $start_time = microtime(true); 
+            $report->generatePivot();
+            // $end_time = microtime(true); 
+            // $execution_time = ($end_time - $start_time); 
+            // echo " It takes ".$execution_time." seconds to execute the script"; 
+        }
+        else{
+            $report->printResult();
+        }
+     ?>
 </body>
 </html>

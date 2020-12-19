@@ -8,10 +8,6 @@ class Dbh {
     private $charset;
 
     public function connect () {
-        // $this->servername = "sql208.epizy.com";
-        // $this->username = "epiz_23895090";
-        // $this->password = "zYbHwof9kG";
-        // $this->dbname = "epiz_23895090_riasec_test";
 
         $this->servername = "localhost";
         $this->username = "root";

@@ -39,7 +39,6 @@ $participantsTbl->addColumn('ptype', 'ptype');
 $participantsTbl->addColumn('gender', 'gender');
 $participantsTbl->addColumn('pname', 'pname');
 
-// $datesTbl->column = array('day'=>'day','month'=>'month','quater'=>'quater','year'=>'year');
 $attendences                     = new Fact;
 $attendences->tblName            = 'attendences';
 $attendences->dimension['dates'] = $datesTbl;
@@ -69,8 +68,6 @@ $measure->operation    = 'SUM';
 $measure->formatString = '#,###.00';
 
 $attendences->measure['attendence'] = $measure;
-
-// hasTeam
 
 $_SESSION['attendences'] = serialize($attendences);
 
@@ -140,7 +137,6 @@ if (isset($_POST['deleteMeasure'])) {
 			<tr>
 				<td>
 					<?php
-                        // print_r($_SESSION['dimension']);
                         print('<br>');
                         $self = $_SERVER['PHP_SELF'];
                         print('<h3>Measure</h3>');

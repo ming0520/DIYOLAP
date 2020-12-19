@@ -90,7 +90,9 @@ Class Report extends Dbh{
     public function printPivotMenu(){
         $measures = array_filter($_SESSION['measure']);
         $dimensions = array_filter($_SESSION['dimension']);
-        $slices = array_filter($_SESSION['slice']);
+        if(isset($_SESSION['slice'])){
+            $slices = array_filter($_SESSION['slice']);
+        }
         $this->printPivotForm($measures,'pivotMea','measures');
         $this->printPivotForm($dimensions,'pivotRow','Row');
         $this->printPivotForm($dimensions,'pivotCol','Column');
@@ -136,7 +138,10 @@ Class Report extends Dbh{
         $colCol = explode('.',$pivotCol)[1];
 
         $query = 'SELECT DISTINCT '. $colCol. ' FROM '. $colTbl;
-        $pivotValues = array_filter($_SESSION['pivotValue']);
+        if(isset($_SESSION['pivotValue'])){
+            $pivotValues = array_filter($_SESSION['pivotValue']);
+        }
+        
         // print_pre($pivotValues);
         if(!empty($pivotValues)){
             $query .= " WHERE ";
@@ -358,7 +363,8 @@ if (isset($_POST['create'])) {
     $_SESSION['create'][] = $_POST['create'];
     $query = $attendences->generateSQL();
     $_SESSION['query'] = $query;
-    header("Location: report.php");
+    print_pre($query);
+    // header("Location: report.php");
     exit();
 }
 

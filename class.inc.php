@@ -333,6 +333,20 @@ class Fact
         $counter = 1;
         $len = count($_SESSION['dimension']);
 
+        // foreach($_SESSION['dimension'] as $dimension){
+        //     if($dimension == end($_SESSION['dimension'])){
+        //         break;
+        //     }
+        //     if($counter != $len - 1){
+        //         $query = $query . $dimension . ",";
+        //     }
+        //     else{
+        //         $query = $query . $dimension;
+        //     }
+            
+        //     $counter++;
+        // }
+
         foreach($_SESSION['dimension'] as $dimension){
             if($counter != $len){
                 $query = $query . $dimension . ",";

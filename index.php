@@ -153,28 +153,32 @@ if (isset($_POST['deleteMeasure'])) {
                         print('<br>');
                         $self = $_SERVER['PHP_SELF'];
                         print('<h3>Measure</h3>');
-                        foreach ($_SESSION['measure'] as $key => $value) {
-                            if ($value != "") {
-                                print("<form action='$self' method='POST'>");
-                                print "{$key} => {$value}";
-                                print("<input type='text' hidden value='$value' name='remove'>");
-                                $btn = "<button type='submit' id='del-btn' name='deleteMeasure' class='btn-danger'>Delete</button>";
-                                print($btn);
-                                print('</form>');
+                        if(isset($_SESSION['measure'])){
+                            foreach ($_SESSION['measure'] as $key => $value) {
+                                if ($value != "") {
+                                    print("<form action='$self' method='POST'>");
+                                    print "{$key} => {$value}";
+                                    print("<input type='text' hidden value='$value' name='remove'>");
+                                    $btn = "<button type='submit' id='del-btn' name='deleteMeasure' class='btn-danger'>Delete</button>";
+                                    print($btn);
+                                    print('</form>');
+                                }
                             }
                         }
                         print('<hr>');
                         print('<h3>Dimension</h3>');
-                        foreach ($_SESSION['dimension'] as $key => $value) {
-                            if ($value != "") {
-                                print("<form action='$self' method='POST'>");
-                                print "{$key} => {$value}";
-                                print("<input type='text' hidden value='$value' name='remove'>");
-                                $btn = "<button type='submit' id='del-btn' name='deleteDimension' class='btn-danger'>Delete</button>";
-                                print($btn);
-                                print('</form>');
-                            }
-                        }  
+                        if(isset($_SESSION['dimension'])){
+                            foreach ($_SESSION['dimension'] as $key => $value) {
+                                if ($value != "") {
+                                    print("<form action='$self' method='POST'>");
+                                    print "{$key} => {$value}";
+                                    print("<input type='text' hidden value='$value' name='remove'>");
+                                    $btn = "<button type='submit' id='del-btn' name='deleteDimension' class='btn-danger'>Delete</button>";
+                                    print($btn);
+                                    print('</form>');
+                                }
+                            }  
+                        }
                     ?>
                 </td>
 				<td>

@@ -107,7 +107,22 @@ if (isset($_POST['dimension'])) {
 
 // add measure to session array
 if (isset($_POST['measure'])) {
-    $_SESSION['measure'][] = $_POST['measure'];
+    $input = $_POST['measure'];
+    $dim = explode(".",$input)[0];
+    $isSame = false;
+    foreach($_SESSION['measure'] as $x){
+        $xdim = explode(".",$x)[0];
+        // print_pre($xdim);
+        if(strcmp($xdim,$dim) === 0){
+            print('<h1>Cannot select same measure!</h1>');
+            $isSame = true;
+            break;
+        }
+    }
+    if(!$isSame){
+        $_SESSION['measure'][] = $_POST['measure'];
+    }
+    $isSame = false;
 }
 
 // if create report btn clicked, generate sql and pass to report.php

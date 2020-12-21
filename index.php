@@ -87,7 +87,22 @@ if (isset($_POST['clear'])) {
 
 // add dimension to session array
 if (isset($_POST['dimension'])) {
-    $_SESSION['dimension'][] = $_POST['dimension'];
+    $input = $_POST['dimension'];
+    $dim = explode(".",$input)[0];
+    $isSame = false;
+    foreach($_SESSION['dimension'] as $x){
+        $xdim = explode(".",$x)[0];
+        // print_pre($xdim);
+        if(strcmp($xdim,$dim) === 0){
+            print('<h1>Cannot select same dimension!</h1>');
+            $isSame = true;
+            break;
+        }
+    }
+    if(!$isSame){
+        $_SESSION['dimension'][] = $_POST['dimension'];
+    }
+    $isSame = false;
 }
 
 // add measure to session array

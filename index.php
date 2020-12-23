@@ -93,15 +93,15 @@ if (isset($_POST['dimension'])) {
     foreach($_SESSION['dimension'] as $x){
         $xdim = explode(".",$x)[0];
         // print_pre($xdim);
-        if(strcmp($xdim,$dim) === 0){
-            print('<h1>Cannot select same dimension!</h1>');
-            $isSame = true;
-            break;
-        }
+        // if(strcmp($xdim,$dim) === 0){
+        //     print('<h1>Cannot select same dimension!</h1>');
+        //     $isSame = true;
+        //     break;
+        // }
     }
-    if(!$isSame){
+    // if(!$isSame){
         $_SESSION['dimension'][] = $_POST['dimension'];
-    }
+    // }
     $isSame = false;
 }
 

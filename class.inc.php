@@ -140,6 +140,77 @@ class Fact
         }
     }
 
+    public function printCommonDimension($table){
+        print('<h4>Common Table</h4>');
+        foreach($table->dimension as $dim){
+            foreach($_SESSION['dimension'] as $sDim){
+                $var = explode('.',$sDim)[0];
+                if($var == $dim->tblName){
+                    $commonTbl[] = $var;
+                }
+            }
+            
+        }
+
+        $uniqueTbl =  array_unique($commonTbl);
+        
+        foreach($uniqueTbl as $tbl){
+            $dimArr[] = $this->get_dimension($tbl);
+        }
+        
+        foreach($dimArr as $dim){
+            $self = $_SERVER['PHP_SELF'];
+            // print("<form action='$self' method='post'>");
+            // print('<label>'.ucfirst($dim->tblName).'</label>&nbsp;:&nbsp;');
+            // print("<select name='commonDimension' id='commonDimension'>");
+            // $dim->printDimension();
+            // print('</select>');
+            // print('&nbsp;&nbsp;<input class = "btn btn-primary btn-sm" type="submit" value="Add"> ');
+            // print('</form>');
+            print("<form action='$self' method='post'>");
+                print('<label>'.ucfirst($dim->tblName).'</label>&nbsp;:&nbsp;');
+                print('<div class="form-row">');
+                    print('<div class="form-group col-md-8">');
+                        print("<select class='custom-select' name='commonDimension' id='commonDimension'>");
+                        $dim->printDimension();
+                        print('</select>');
+                    print('</div>');
+                    print('<div class="form-group col-md-4">');
+                        print('&nbsp;&nbsp;<input class = "btn btn-primary" type="submit" value="Add"> ');
+                    print('</div>');
+                print('</div>');
+            print('</form>');    
+        }
+
+    }
+
+    public function printHasTeamMeasure(){
+        print("<h3>HasTeam</h3>");
+        foreach($this->measure as $key => $mea){ 
+            $self = $_SERVER['PHP_SELF'];
+            // print("<form action='$self' method='post'>");
+            // print('<label>'.ucfirst($mea->name).'</label>&nbsp;:&nbsp;');
+            // print("<select name='hasTeamMeasure' id='hasTeamMeasure'>");
+            // $this->printMeasure($key);
+            // print('</select>');
+            // print('&nbsp;&nbsp;<input class = "btn btn-primary btn-sm" type="submit" value="Add"> ');
+            // print('</form>');
+            print("<form action='$self' method='post'>");
+            print('<label>'.ucfirst($mea->name).'</label>&nbsp;:&nbsp;');
+            print('<div class="form-row">');
+                print('<div class="form-group col-md-8">');
+                    print("<select class='custom-select' name='hasTeamMeasure' id='hasTeamMeasure'>");
+                    $this->printMeasure($key);
+                    print('</select>');
+                print('</div>');
+                print('<div class="form-group col-md-4">');
+                    print('&nbsp;&nbsp;<input class = "btn btn-primary" type="submit" value="Add"> ');
+                print('</div>');
+            print('</div>');
+        print('</form>');
+        }
+    }
+
     public function printAllDimensionSlice(){
         foreach($this->dimension as $key => $dim){ 
             $self = $_SERVER['PHP_SELF'];

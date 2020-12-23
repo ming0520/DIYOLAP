@@ -10,8 +10,8 @@ function print_pre($msg){
     print('</pre>');
 }
 
-$teamsTbl = new Dimension('teams', 'teamid');
-$teamsTbl->addColumn('tname', 'tname');
+// $teamsTbl = new Dimension('teams', 'teamid');
+// $teamsTbl->addColumn('tname', 'tname');
 
 $participantsTbl = new Dimension('participants', 'participantid');
 $participantsTbl->addColumn('pcategory', 'pcategory');
@@ -21,7 +21,7 @@ $participantsTbl->addColumn('pname', 'pname');
 
 $attendences                     = new Fact;
 $attendences->tblName            = 'hasteam';
-$attendences->dimension['teams'] = $teamsTbl;
+// $attendences->dimension['teams'] = $teamsTbl;
 $attendences->dimension['participants'] = $participantsTbl;
 
 $attendences->addReference('teams','tid');
@@ -45,6 +45,7 @@ $attendences->measure['participants'] = $measure;
 
 
 $_SESSION['attendences'] = serialize($attendences);
+$_SESSION['hasteam'] = serialize($attendences);
 
 // if clear btn clicked, clear all dimension and measure
 if (isset($_POST['clear'])) {
@@ -61,15 +62,15 @@ if (isset($_POST['dimension'])) {
     foreach($_SESSION['dimension'] as $x){
         $xdim = explode(".",$x)[0];
         // print_pre($xdim);
-        if(strcmp($xdim,$dim) === 0){
-            print('<h1>Cannot select same dimension!</h1>');
+        // // if(strcmp($xdim,$dim) === 0){
+        //     print('<h1>Cannot select same dimension!</h1>');
             $isSame = true;
             break;
-        }
+        // }
     }
-    if(!$isSame){
+    // if(!$isSame){
         $_SESSION['dimension'][] = $_POST['dimension'];
-    }
+    // }
     $isSame = false;
 }
 

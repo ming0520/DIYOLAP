@@ -136,12 +136,18 @@ Class Report extends Dbh{
         print("</div>");
         print('</form>');
     }
+
 // process pivot query and display result
     public function generatePivot(){
+        // convert session to variable
         $pivotMea = $_SESSION['pivotMea'];
         $pivotRow = $_SESSION['pivotRow'];
         $pivotCol = $_SESSION['pivotCol'];
-
+        
+        if(isset($_SESSION['pivotValue'])){
+            $pivotValues = array_filter($_SESSION['pivotValue']);
+        }
+        //get measure operation and column name
         $meaOp = explode('(',$pivotMea)[0];
         $meaName = explode('(',$pivotMea)[1];
         $meaName = explode(')',$meaName)[0];
@@ -152,11 +158,10 @@ Class Report extends Dbh{
         $rowCol = explode('.',$pivotRow)[1];
         $colCol = explode('.',$pivotCol)[1];
 
+        // Get selected dimension unique value to pivott
+        // Add select to qeury
         $query = 'SELECT DISTINCT '. $colCol. ' FROM '. $colTbl;
-        if(isset($_SESSION['pivotValue'])){
-            $pivotValues = array_filter($_SESSION['pivotValue']);
-        }
-        
+        // Add where statement if exists
         if(!empty($pivotValues)){
             $query .= " WHERE ";
             foreach($pivotValues as $key => $pivotValue){
@@ -174,24 +179,31 @@ Class Report extends Dbh{
             }
         }
 
-
+        // Add order by for selected dimension to pivot
         $query .= ' ORDER BY '.$colCol;
+
+        // Start PDO connection
         $colStmt = $this->connect()->prepare($query);
         $colStmt->execute();
 
+        // get row count
         if($colStmt->rowCount()){
             while($row = $colStmt->fetch()){
                 $column[] = $row[$colCol];
             }
         }
 
+        // initialize & reset variable
         $query = "";
 
+        // Initialize select and join variable
         $select = "SELECT DISTINCT ";
         $join = " RIGHT JOIN ";
 
+        // add select statement
         $query .= $select;
         $query .= $rowTbl .".". $rowCol.",";
+        // make the selected unique value to column (rotate)
         foreach($column as $col){
             $str = " ".$meaOp."(CASE WHEN ". $colCol."='".$col."'". " THEN ". $meaName ." ELSE NULL END".")". " AS '".$col."'";
             $query .= $str;
@@ -202,16 +214,19 @@ Class Report extends Dbh{
             }
         } 
 
+        // Add from table statement
         $query .= " FROM ";
         $attendences = unserialize($_SESSION['attendences']);
         $query .= $attendences->tblName . " ";
 
+        // if row and column from same dimension
         if($colTbl == $rowTbl){
             $dim = $attendences->dimension[$colTbl];
             $ref = $attendences->tblName.".".$attendences->reference[$colTbl];
             $colKey = $dim->tblName.".".$dim->pkey;
             $query .= $join. $dim->tblName ." ON ". $ref . " = ".$colKey;
         }
+        // if row and col is not from same dimension
         else{
             $dim = $attendences->dimension[$colTbl];
             $ref = $attendences->tblName.".".$attendences->reference[$colTbl];
@@ -224,13 +239,223 @@ Class Report extends Dbh{
             $query .= $join. $dim->tblName ." ON ". $ref . " = ".$rowKey;
         }
 
+        // Add group by statement
         $query .= " GROUP BY ";
+        // Group by row
         $query .= $pivotRow;
 
 
         
         // Start PDO connection
         $pivotStmt = $this->connect()->prepare($query);
+        $pivotStmt->execute();
+
+        // get number of column
+        $ttlCol = $pivotStmt->columnCount();
+        $column = array();
+
+        // assign column name to column array
+        for ($counter = 0; $counter < $ttlCol; $counter ++) {
+            $meta = $pivotStmt->getColumnMeta($counter);
+            $column[] = $meta['name'];
+        }
+        
+        // initialize variable
+        $result = array();
+
+        // assign each column values to variable - result by column
+        if($pivotStmt->rowCount()){
+            while($row = $pivotStmt->fetch()){
+                foreach($column as $col){
+                    $result[$col][] = $row[$col];
+                }
+            }
+
+            // display dynamically
+            // get row count
+            $rowCount = $pivotStmt->rowCount();
+            print('<div class="container-fluid">');
+            print('<div class="table-responsive table-responsive-sm">');
+            print "<table class='table table-striped table-hover'>";
+            print '<thead class=""><tr>';
+            // skip for first 2 column
+                print '<tr>';
+                for($j=0;$j<2;$j++){
+                    print '<th>'.'</th>';
+                }
+                // colspan for column by total number of column - 1
+                $colspan = $ttlCol - 1;
+                print "<th colspan=$colspan>".$colCol."</th>";
+                print '</tr>';
+                    print("<th scope='row'> Count </th>");
+                    foreach($column as $col){
+                        print '<th>'.$col.'</th>';
+                    }
+                print '</tr>';
+                print '</thead>';
+                // display all the result
+                for($i=0; $i < $rowCount; $i++){
+                    print('<tr>');
+                    print("<td scope='row'>".$i."</td>");
+                    foreach($column as $col){
+                        print('<td>'.$result[$col][$i].'</td>');
+                    }
+                    print('</tr>');
+                }
+            print '</table>';
+            print '</div>';
+            print '</div>';
+
+        }
+        
+        return $query;
+    }
+
+    public function drillAcross(){
+        // convert session to variable and unpack session object
+        $attendences = unserialize($_SESSION['attendences']);
+        $hasteam = unserialize($_SESSION['hasteam']);
+        $commonDimension = $_SESSION['commonDimension'];
+        $commonTbl = explode('.',$commonDimension)[0];
+        $measures1 = $_SESSION['measure'];
+        $measures2 = $_SESSION['hasTeamMeasure'];
+        $slices = $_SESSION['slice'];
+        $mea2Col = explode('(',$measures2)[1];
+        $mea2Col = explode(')',$mea2Col)[0];
+
+        // Initialize query statement that will use in this function
+        $select = 'SELECT DISTINCT ';
+        $join = ' INNER JOIN ';
+        $group = ' GROUP BY ';
+        $on = ' ON ';
+        $equal = ' = ';
+        $apos = "'"; //apostrophe
+        $from = " FROM ";
+        
+        // start generate query by adding select statement
+        $firstQuery = $select;
+        $firstQuery .= ' * '.$from;
+        $firstQuery .= $attendences->tblName." ";
+        
+        // If there is slice and dice
+        if(!empty($slices)){
+            // get all tableName for slice and dice
+            foreach($slices as $key => $slice){
+                $keyArr[] = $slice->dimension;
+            }
+            // get the unique table from key array
+            $uniqueKey = array_unique($keyArr);
+            foreach($uniqueKey as $ky){
+                foreach($slices as $key => $slice){
+                    if($ky == $slice->dimension){
+                        $val[$ky][] = $slice->value;
+                    }
+                }
+            }
+            // join the dimension for slice
+            foreach($uniqueKey as $ky){
+                $firstQuery .= $join;
+                $refTbl = explode('.',$ky)[0];
+                $firstQuery .= $refTbl;
+                $firstQuery .= $on;
+                $firstQuery .= $attendences->tblName . '.' . $attendences->reference[$refTbl];
+                $firstQuery .= $equal;
+                $firstQuery .= $refTbl .'.'.$attendences->dimension[$refTbl]->pkey." ";
+            }
+
+            // add where statement if there is slice
+            // loop through all the value
+            $firstQuery .= ' WHERE ';
+            foreach($val as $dim => $values){
+                $firstQuery .= $dim;
+                $firstQuery .= ' IN (';
+                foreach($values as $index=>$value){
+                    $firstQuery .= $apos.$value.$apos;
+                    if($value != end($values)){
+                        $firstQuery .= ",";
+                    }
+                }
+                $firstQuery .= ")";
+                if($values != end($val)){
+                    $firstQuery .= " AND ";
+                }
+            }
+        }
+
+        // Start generating outer query
+        // outer query
+        $secondQuery = 'SELECT ';
+
+        // add measure from fact table 1
+        if(!empty($measures1)){
+            foreach($measures1 as $measure){
+                $secondQuery .= $measure;
+                if($measure != end($measures1)){
+                    $secondQuery .= ",";
+                }
+            }
+        }
+
+        // add the selected common dimension and loop until the highest hierarchy
+        $dimension = $attendences->dimension[$commonTbl];
+        $cd = explode('.',$commonDimension)[1];
+        $arrKey = array_keys($dimension->column);
+        $index = array_search($cd,$arrKey);
+        
+        while($index != -1 ){
+            $secondQuery.=',';
+            $secondQuery .= $dimension->column[$arrKey[$index]]." ";
+            $index--;
+        }
+
+        // add measure from fact table 2
+        if(!empty($measures2)){
+            $secondQuery .= ",";
+            $secondQuery .= $measures2;
+
+        }
+
+
+        // concat the inner query to outer query
+        $secondQuery .= $from;
+        $secondQuery .= "( ";
+        $secondQuery .= $firstQuery;
+        $secondQuery .= ") as tbl";
+        
+
+        // join the unique table with second fact and common dimension
+        $secondQuery .= $join;
+        $secondQuery .= $hasteam->tblName . $on;
+        $secondQuery .= 'tbl'.".";
+        $secondQuery .= $attendences->reference[$commonTbl];
+        $secondQuery .= $equal;
+        $secondQuery .= $hasteam->tblName.".".$hasteam->reference[$commonTbl];
+
+        $secondQuery .= $join;
+        $secondQuery .= $commonTbl . $on;
+        $secondQuery .= $hasteam->tblName.".".$hasteam->reference[$commonTbl];
+        $secondQuery .= $equal;
+        $secondQuery .= $commonTbl.".".$attendences->dimension[$commonTbl]->pkey;
+        
+
+        // add the group by statement by looping until highest hierarchy
+        $secondQuery .= $group;
+        $dimension = $attendences->dimension[$commonTbl];
+        $cd = explode('.',$commonDimension)[1];
+        $arrKey = array_keys($dimension->column);
+        $index = array_search($cd,$arrKey);
+        
+        while($index != -1 ){
+            $secondQuery .= $dimension->column[$arrKey[$index]]." ";
+            $index--;
+            if($index != -1){
+                $secondQuery.=',';
+            }
+        }
+
+        // Display the result dynamically same as generatePivot()
+        // Start PDO connection
+        $pivotStmt = $this->connect()->prepare($secondQuery);
         $pivotStmt->execute();
 
         $ttlCol = $pivotStmt->columnCount();
@@ -260,7 +485,6 @@ Class Report extends Dbh{
                     print '<th>'.'</th>';
                 }
                 $colspan = $ttlCol - 1;
-                print "<th colspan=$colspan>".$colCol."</th>";
                 print '</tr>';
                     print("<th scope='row'> Count </th>");
                     foreach($column as $col){
@@ -280,9 +504,7 @@ Class Report extends Dbh{
             print '</div>';
             print '</div>';
 
-        }
-        
-        return $query;
+        }        
     }
 
     
@@ -338,10 +560,16 @@ $attendences = unserialize($_SESSION['attendences']);
 
 // If slice & dice button clicked, assign slice instant to session with slice key
 if (isset($_POST['slice'])) {
+    
     $slice = new Slice;
     $slice->dimension = $_POST['slice'];
     $slice->value = $_POST['value'];
-    $_SESSION['slice'][] = $slice;
+
+    $key = array_search($slice,$_SESSION['slice']);
+    if($key === false){
+        $_SESSION['slice'][] = $slice;
+    }else{
+    }
 }
 
 // if clearSlice btn clicked, clear the slice session
@@ -431,6 +659,40 @@ if (isset($_POST['sliceBtn'])) {
         print("<p>Please create report at main page first!</p>");
     }
 }
+
+// add fact 2 measure
+if(isset($_POST['hasTeamMeasure'])){
+    $_SESSION['hasTeamMeasure'] = $_POST['hasTeamMeasure'];
+}
+
+// remove fact 2 measure
+if(isset($_POST['deleteHasTeamMeasure'])){
+    $key = $_POST['value'];
+    unset($_SESSION['hasTeamMeasure']);
+}
+
+// unpack the session object, fact object
+if(isset($_SESSION['hasteam'])){
+    $hasteam = unserialize($_SESSION['hasteam']);
+}
+
+// add common dimension for drill across.
+if(isset($_POST['commonDimension'])){
+    $_SESSION['commonDimension'] = $_POST['commonDimension'];
+    
+}
+
+// remove the common dimension
+if(isset($_POST['deleteCommonDimension'])){
+    unset($_SESSION['commonDimension']);
+}
+
+// clear the drill across
+if(isset($_POST['clearCommonDimension'])){
+    unset($_SESSION['hasTeamMeasure']);
+    unset($_SESSION['commonDimension']);
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -447,10 +709,38 @@ if (isset($_POST['sliceBtn'])) {
             <td>Constrait</td>
             <td>Slice and Dice</td>
             <td>Pivoting</td>
+            <td>Drill Across</td>
         </tr>
         <tr>
             <td>
             <?php
+                $self = $_SERVER['PHP_SELF'];
+                print('<h3>Drill Across</h3>');
+                if(isset($_SESSION['hasTeamMeasure'])){
+                    print('<p>Another Measure</p>');
+                        $value = $key = $_SESSION['hasTeamMeasure'];
+                        if ($value != "") {
+                            print("<form action='$self' method='POST'>");
+                            print "{$key} => ";
+                            print("<input type='text' hidden value='$key' name='value'>");
+                            $btn = "<button type='submit' id='del-btn' name='deleteHasTeamMeasure' class='btn-danger'>Delete</button>";
+                            print($btn);
+                            print('</form>');
+                    }  
+                }
+                if(isset($_SESSION['commonDimension'])){
+                    print('<p>Common Dimension</p>');
+                    $key = $value = $_SESSION['commonDimension'];
+                        if ($value != "") {
+                            print("<form action='$self' method='POST'>");
+                            print "{$value}";
+                            print("<input type='text' hidden value='$key' name='value'>");
+                            $btn = "<button type='submit' id='del-btn' name='deleteCommonDimension' class='btn-danger'>Delete</button>";
+                            print($btn);
+                            print('</form>');
+                    }  
+                }
+
                 $self = $_SERVER['PHP_SELF'];
                 print('<h3>Pivot</h3>');
                 if(isset($_SESSION['pivotMea'])){
@@ -524,7 +814,7 @@ if (isset($_POST['sliceBtn'])) {
                     if ($value != "") {
                         print("<form action='$self' method='POST'>");
                         print "{$key} => {$value}";
-                        print("<input type='text' hidden value='$value' name='remove'>");
+                        print("<input type='text' hidden value='$key' name='remove'>");
                         $btn = "<button type='submit' id='del-btn' name='deleteMeasure' class='btn-danger'>Delete</button>";
                         print($btn);
                         print('</form>');
@@ -542,6 +832,8 @@ if (isset($_POST['sliceBtn'])) {
                         print('</form>');
                     }
                 }  
+                print('<hr>');
+
             ?>            
             </td>
             <td>
@@ -568,6 +860,20 @@ if (isset($_POST['sliceBtn'])) {
                     <button type="submit" class = "btn btn-success" name='pivotBtn' value='pivotBtn'>Create Pivot</button>
                 </form>                
             </td>
+
+
+            <td>
+            <?php
+                    $hasteam->printHasTeamMeasure(); 
+                    $attendences->printCommonDimension($hasteam);                
+            ?>
+                 <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="POST">
+                    <button type="submit" class = 'btn btn-warning' name='clearCommonDimension' value='clearCommonDimension'>Clear All</button>
+                </form>
+                <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="POST">
+                    <button type="submit" class = "btn btn-success" name='drillAcross' value='drillAcross'>Drill Across</button>
+                </form>                   
+            </td>
         </tr>
 </div>
     </table>
@@ -578,6 +884,9 @@ if (isset($_POST['sliceBtn'])) {
             // $end_time = microtime(true); 
             // $execution_time = ($end_time - $start_time); 
             // echo " It takes ".$execution_time." seconds to execute the script"; 
+        }
+        else if(isset($_POST['drillAcross'])){
+            $report->drillAcross();
         }
         else{
             $report->printResult();

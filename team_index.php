@@ -10,8 +10,8 @@ function print_pre($msg){
     print('</pre>');
 }
 
-$teamsTbl = new Dimension('teams', 'teamid');
-$teamsTbl->addColumn('tname', 'tname');
+// $teamsTbl = new Dimension('teams', 'teamid');
+// $teamsTbl->addColumn('tname', 'tname');
 
 $participantsTbl = new Dimension('participants', 'participantid');
 $participantsTbl->addColumn('pcategory', 'pcategory');
@@ -21,7 +21,7 @@ $participantsTbl->addColumn('pname', 'pname');
 
 $attendences                     = new Fact;
 $attendences->tblName            = 'hasteam';
-$attendences->dimension['teams'] = $teamsTbl;
+// $attendences->dimension['teams'] = $teamsTbl;
 $attendences->dimension['participants'] = $participantsTbl;
 
 $attendences->addReference('teams','tid');
@@ -45,29 +45,50 @@ $attendences->measure['participants'] = $measure;
 
 
 $_SESSION['attendences'] = serialize($attendences);
+$_SESSION['hasteam'] = serialize($attendences);
 
+// if clear btn clicked, clear all dimension and measure
 if (isset($_POST['clear'])) {
     session_unset();
     $_SESSION['dimension'][] = "";
     $_SESSION['measure'][]   = "";
 }
+
+// add dimension to session array
 if (isset($_POST['dimension'])) {
-    $_SESSION['dimension'][] = $_POST['dimension'];
+    $input = $_POST['dimension'];
+    $dim = explode(".",$input)[0];
+    $isSame = false;
+    foreach($_SESSION['dimension'] as $x){
+        $xdim = explode(".",$x)[0];
+        // print_pre($xdim);
+        // // if(strcmp($xdim,$dim) === 0){
+        //     print('<h1>Cannot select same dimension!</h1>');
+            $isSame = true;
+            break;
+        // }
+    }
+    // if(!$isSame){
+        $_SESSION['dimension'][] = $_POST['dimension'];
+    // }
+    $isSame = false;
 }
 
+// add measure to session array
 if (isset($_POST['measure'])) {
     $_SESSION['measure'][] = $_POST['measure'];
 }
 
+// if create report btn clicked, generate sql and pass to report.php
 if (isset($_POST['create'])) {
     $_SESSION['create'][] = $_POST['create'];
     $query = $attendences->generateSQL($false);
     $_SESSION['query'] = $query;
-    $_SESSION['attendences'] = serialize($attendences);
     header("Location: report.php");
     exit();
 }
 
+// if deleteDimension is clicked, delete corespond dimension
 if (isset($_POST['deleteDimension'])) {
     $del_val = $_POST['remove'];
     $key = array_search($del_val, $_SESSION['dimension']);
@@ -75,7 +96,7 @@ if (isset($_POST['deleteDimension'])) {
         unset($_SESSION['dimension'][$key]);
     }
 }
-
+// if deleteMeasure is clicked, delete corespond measure
 if (isset($_POST['deleteMeasure'])) {
     $del_val = $_POST['remove'];
     $key = array_search($del_val, $_SESSION['measure']);
@@ -83,7 +104,6 @@ if (isset($_POST['deleteMeasure'])) {
         unset($_SESSION['measure'][$key]);
     }
 }
-
 
 ?>
 	<!DOCTYPE html>

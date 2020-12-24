@@ -160,13 +160,6 @@ class Fact
         
         foreach($dimArr as $dim){
             $self = $_SERVER['PHP_SELF'];
-            // print("<form action='$self' method='post'>");
-            // print('<label>'.ucfirst($dim->tblName).'</label>&nbsp;:&nbsp;');
-            // print("<select name='commonDimension' id='commonDimension'>");
-            // $dim->printDimension();
-            // print('</select>');
-            // print('&nbsp;&nbsp;<input class = "btn btn-primary btn-sm" type="submit" value="Add"> ');
-            // print('</form>');
             print("<form action='$self' method='post'>");
                 print('<label>'.ucfirst($dim->tblName).'</label>&nbsp;:&nbsp;');
                 print('<div class="form-row">');
@@ -188,13 +181,6 @@ class Fact
         print("<h3>HasTeam</h3>");
         foreach($this->measure as $key => $mea){ 
             $self = $_SERVER['PHP_SELF'];
-            // print("<form action='$self' method='post'>");
-            // print('<label>'.ucfirst($mea->name).'</label>&nbsp;:&nbsp;');
-            // print("<select name='hasTeamMeasure' id='hasTeamMeasure'>");
-            // $this->printMeasure($key);
-            // print('</select>');
-            // print('&nbsp;&nbsp;<input class = "btn btn-primary btn-sm" type="submit" value="Add"> ');
-            // print('</form>');
             print("<form action='$self' method='post'>");
             print('<label>'.ucfirst($mea->name).'</label>&nbsp;:&nbsp;');
             print('<div class="form-row">');
@@ -403,20 +389,6 @@ class Fact
         $_SESSION['dimension'] = array_filter($_SESSION['dimension']);
         $counter = 1;
         $len = count($_SESSION['dimension']);
-
-        // foreach($_SESSION['dimension'] as $dimension){
-        //     if($dimension == end($_SESSION['dimension'])){
-        //         break;
-        //     }
-        //     if($counter != $len - 1){
-        //         $query = $query . $dimension . ",";
-        //     }
-        //     else{
-        //         $query = $query . $dimension;
-        //     }
-            
-        //     $counter++;
-        // }
 
         foreach($_SESSION['dimension'] as $dimension){
             if($counter != $len){
